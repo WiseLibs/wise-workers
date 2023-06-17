@@ -1,6 +1,10 @@
 'use strict';
 const worker = require('worker_threads');
+const Movable = require('./movable');
 const { parentPort } = worker;
+
+// TODO: implement generator/asyncGenerator function support
+// TODO: implement callback support (functions in top-level args)
 
 process.on('unhandledRejection', (err) => {
 	throw err;
@@ -38,5 +42,10 @@ Promise.resolve(require(FILENAME)).then((methods) => {
 });
 
 function respond(value, isFailure) {
-	parentPort.postMessage([OP_RESPONSE, value, isFailure]);
+	let transferList = [];
+	if (value instanceof Movable) {
+		transferList = value.transferList;
+		value = value.value;
+	}
+	parentPort.postMessage([OP_RESPONSE, value, isFailure], transferList);
 }
