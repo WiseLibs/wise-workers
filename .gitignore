@@ -1,0 +1,13 @@
+.DS_STORE
+.env
+.log
+.logs
+log/
+logs/
+temp/
+tmp/
+dist/
+dst/
+build/
+node_modules/
+TODO
