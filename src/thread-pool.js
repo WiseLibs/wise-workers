@@ -80,7 +80,7 @@ function ThreadPool(options) {
 			.on('error', (err) => {
 				isErrored = true;
 				deleteFromArray(availableWorkers, worker);
-				worker.terminate(); // Required for AbortSignal support
+				worker.terminate(); // Required for AbortSignal handling
 				respond(worker, err, true) || this.emit('error', err);
 			})
 			.on('exit', () => {
@@ -88,6 +88,7 @@ function ThreadPool(options) {
 				deleteFromArray(allWorkers, worker);
 				if (isInitializing) {
 					if (!isErrored) {
+						// It's always considered an error if a worker exits while initializing.
 						this.emit('error', new Error('Worker thread exited while starting up'));
 					}
 				} else {
@@ -122,6 +123,9 @@ function ThreadPool(options) {
 
 		if (signal) {
 			const onAbort = () => {
+				// If a job is aborted, it's either in the queue or assignedJobs.
+				// We search both places and remove it from wherever it is.
+				// If it was in assignedJobs, we also terminate the worker.
 				if (queue.delete(job)) {
 					job.reject(signal.reason);
 					job.cleanup();

@@ -1,16 +1,42 @@
 'use strict';
 const worker = require('worker_threads');
+const { parentPort } = worker;
 
-process.on('unhandledRejection', () => {
+process.on('unhandledRejection', (err) => {
+	throw err;
+});
+parentPort.on('messageerror', (err) => {
 	throw err;
 });
 
 // Unwrap the user's workerData, and extract our own pieces of it.
-const {
-	OP_RESPONSE,
-	OP_READY,
-	FILENAME,
-} = worker.workerData;
+const { OP_RESPONSE, OP_READY, FILENAME } = worker.workerData;
 worker.workerData = worker.workerData.workerData;
 
-// TODO: implement worker (load file, listen for tasks, invoke, respond)
+// Load the user's worker script. It may export a promise.
+// TODO: add support for ESM files
+Promise.resolve(require(FILENAME)).then((methods) => {
+	if (typeof methods !== 'object' || methods === null) {
+		throw new TypeError('Worker must export an object');
+	}
+
+	parentPort.on('message', ([methodName, args]) => {
+		new Promise((resolve) => {
+			const method = methods[methodName];
+			if (typeof method !== 'function') {
+				throw new Error(`Method "${methodName}" not found on worker`);
+			}
+			resolve(method(...args));
+		}).then((value) => {
+			respond(value, false);
+		}, (err) => {
+			respond(err, true);
+		});
+	});
+
+	parentPort.postMessage([OP_READY]);
+});
+
+function respond(value, isFailure) {
+	parentPort.postMessage([OP_RESPONSE, value, isFailure]);
+}
