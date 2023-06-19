@@ -1,4 +1,6 @@
 'use strict';
+const util = require('util');
+const crypto = require('crypto');
 const { Worker } = require('worker_threads');
 const EventEmitter = require('events');
 const Queue = require('./queue');
@@ -6,11 +8,13 @@ const normalizeOptions = require('./normalize-options');
 
 const WORKER_SCRIPT = require.resolve('./worker');
 const NOOP = () => {};
-const OP_RESPONSE = Math.random();
-const OP_READY = Math.random();
+const OP_RESPONSE = crypto.randomBytes(4).readInt32LE();
+const OP_READY = crypto.randomBytes(4).readInt32LE();
 
 // TODO: implement generator/asyncGenerator function support (needs new op code)
 // TODO: implement callback support (functions in top-level args)
+// TODO: make sure generator/asyncGenerator functions can yield moved values
+// TODO: make sure callback args/returns can be moved values
 
 function ThreadPool(options) {
 	if (new.target == null) {
@@ -43,15 +47,23 @@ function ThreadPool(options) {
 				spawn();
 			}
 		} catch (err) {
-			// This can occur within the ThreadPool constructor, so we emit it
-			// asynchronously to given callers a chance to listen for the event.
-			process.nextTick(() => this.emit('error', err));
+			// This can occur within the ThreadPool constructor, so we delay it
+			// to given callers a chance to listen for the "error" event.
+			process.nextTick(() => fatal(err));
 		}
 	};
 
 	const spawn = () => {
 		let isInitializing = true;
 		let isErrored = false;
+
+		const onError = (err) => {
+			if (isErrored) return;
+			isErrored = true;
+			deleteFromArray(availableWorkers, worker);
+			worker.terminate(); // Required for AbortSignal handling and destroy()
+			respond(worker, err, true) || fatal(err, !isInitializing);
+		};
 
 		const worker = new Worker(WORKER_SCRIPT, workerOptions)
 			.on('message', (msg) => {
@@ -71,28 +83,20 @@ function ThreadPool(options) {
 						break;
 				}
 			})
-			.on('messageerror', (err) => {
-				isErrored = true;
-				deleteFromArray(availableWorkers, worker);
-				worker.terminate();
-				respond(worker, err, true) || this.emit('error', err);
-			})
-			.on('error', (err) => {
-				isErrored = true;
-				deleteFromArray(availableWorkers, worker);
-				worker.terminate(); // Required for AbortSignal handling
-				respond(worker, err, true) || this.emit('error', err);
-			})
+			.on('messageerror', onError)
+			.on('error', onError)
 			.on('exit', () => {
 				deleteFromArray(availableWorkers, worker);
 				deleteFromArray(allWorkers, worker);
 				if (isInitializing) {
 					if (!isErrored) {
 						// It's always considered an error if a worker exits while initializing.
-						this.emit('error', new Error('Worker thread exited while starting up'));
+						fatal(new Error('Worker thread exited while starting up'));
 					}
 				} else {
-					respond(worker, new Error('Worker thread exited prematurely'), true);
+					if (!isErrored) {
+						respond(worker, new Error('Worker thread exited prematurely'), true);
+					}
 					spawnAsNeeded();
 				}
 			});
@@ -113,6 +117,12 @@ function ThreadPool(options) {
 			availableWorkers.push(worker);
 			worker.unref();
 		}
+	};
+
+	const fatal = (err, keepWorkers = false) => {
+		if (isDestroyed) return;
+		if (!keepWorkers) destroy(err);
+		this.emit('error', err);
 	};
 
 	const createJob = (signal) => {
@@ -162,7 +172,7 @@ function ThreadPool(options) {
 			signal.throwIfAborted();
 		}
 		if (isDestroyed) {
-			throw new Error('This ThreadPool was previously destroyed');
+			throw new Error('Thread pool was destroyed');
 		}
 
 		const { job, promise } = createJob(signal);
@@ -195,17 +205,24 @@ function ThreadPool(options) {
 		return false;
 	};
 
-	const destroy = () => {
-		isDestroyed = true;
-		options.minThreads = 0;
-		options.maxThreads = 0;
-		return Promise.all(allWorkers.map(x => x.terminate())).then(() => {
+	const destroy = (err) => {
+		if (!isDestroyed) {
+			isDestroyed = true;
+			options.minThreads = 0;
+			options.maxThreads = 0;
+			if (err == null) {
+				err = new Error('Thread pool was destroyed');
+			}
+			for (const worker of allWorkers) {
+				worker.emit('error', err);
+			}
 			while (queue.size) {
 				const job = queue.shift();
-				job.reject(new Error('Worker thread exited prematurely'));
+				job.reject(err);
 				job.cleanup();
 			}
-		});
+		}
+		return Promise.all(allWorkers.map(worker => worker.terminate()));
 	};
 
 	Object.defineProperties(this, {
@@ -223,6 +240,10 @@ function ThreadPool(options) {
 		},
 		pendingTaskCount: {
 			get: () => assignedJobs.size + queue.size,
+			enumerable: true,
+		},
+		destroyed: {
+			get: () => isDestroyed,
 			enumerable: true,
 		},
 		call: {

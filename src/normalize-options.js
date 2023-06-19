@@ -20,7 +20,7 @@ module.exports = (options, workerOptions) => {
 	if (!path.posix.isAbsolute(options.filename)) {
 		throw new TypeError('Filename must be a POSIX-style absolute path');
 	}
-	if (!['.js', '.mjs', '.cjs'].includes(path.posix.extname(options.filename))) {
+	if (!['.js', '.mjs', '.cjs', ''].includes(path.posix.extname(options.filename))) {
 		throw new TypeError('Filename extension must be either ".js", ".mjs", or ".cjs"');
 	}
 
@@ -41,8 +41,8 @@ module.exports = (options, workerOptions) => {
 		if (!Number.isInteger(options.maxThreads)) {
 			throw new TypeError('Expected options.maxThreads to be an integer');
 		}
-		if (options.maxThreads < 0) {
-			throw new RangeError('Expected options.maxThreads to be non-negative');
+		if (options.maxThreads <= 0) {
+			throw new RangeError('Expected options.maxThreads to be greater than 0');
 		}
 		if (options.maxThreads < options.minThreads) {
 			throw new RangeError('Expected options.maxThreads to be greater than or equal to options.minThreads');
