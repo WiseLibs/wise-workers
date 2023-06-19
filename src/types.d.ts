@@ -1,18 +1,33 @@
 import EventEmitter from 'events';
+import { WorkerOptions } from 'worker_threads';
 
 declare class ThreadPool extends EventEmitter {
-	get filename(): string;
+	constructor(options: ThreadPool.ThreadPoolOptions);
+
+	readonly filename: string;
 	get threadCount(): number;
 	get activeThreadCount(): number;
 	get pendingTaskCount(): number;
 	get destroyed(): boolean;
 
-	call(methodName: string, ...args: any[]): Promise<any>;
-	invoke(methodName: string, options?: ThreadPool.InvokeOptions): Promise<any>;
+	call<T = any>(methodName: string, ...args: any[]): Promise<T>;
+	invoke<T = any>(methodName: string, options?: ThreadPool.InvokeOptions): Promise<T>;
 	destroy(error?: Error): Promise<void>;
 }
 
 declare namespace ThreadPool {
+	export interface ThreadPoolOptions {
+		filename: string;
+		minThreads?: number;
+		maxThreads?: number;
+		execArgv?: WorkerOptions['execArgv'];
+		argv?: WorkerOptions['argv'];
+		env?: WorkerOptions['env'];
+		workerData?: WorkerOptions['workerData'];
+		resourceLimits?: WorkerOptions['resourceLimits'];
+		trackUnmanagedFds?: WorkerOptions['trackUnmanagedFds'];
+		name?: WorkerOptions['name'];
+	}
 	export interface InvokeOptions {
 		args?: ReadonlyArray<any>;
 		transferList?: ReadonlyArray<any>;
