@@ -5,15 +5,16 @@ const { Worker } = require('worker_threads');
 const EventEmitter = require('events');
 const Queue = require('./queue');
 const normalizeOptions = require('./normalize-options');
+const makeAsyncIterable = require('./make-async-iterable');
 
 const WORKER_SCRIPT = require.resolve('./worker');
 const NOOP = () => {};
+const OP_YIELD = crypto.randomBytes(4).readInt32LE();
 const OP_RESPONSE = crypto.randomBytes(4).readInt32LE();
+const OP_GENERATOR = crypto.randomBytes(4).readInt32LE();
 const OP_READY = crypto.randomBytes(4).readInt32LE();
 
-// TODO: implement generator/asyncGenerator function support (needs new op code)
 // TODO: implement callback support (functions in top-level args)
-// TODO: make sure generator/asyncGenerator functions can yield moved values
 // TODO: make sure callback args/returns can be moved values
 
 function ThreadPool(options) {
@@ -29,7 +30,9 @@ function ThreadPool(options) {
 	// We include our own data within the workerData.
 	// Our worker.js script will unwrap this, so the user will never know.
 	workerOptions.workerData = {
+		OP_YIELD,
 		OP_RESPONSE,
+		OP_GENERATOR,
 		OP_READY,
 		FILENAME: options.filename,
 		workerData: workerOptions.workerData,
@@ -70,10 +73,16 @@ function ThreadPool(options) {
 				if (isErrored) return;
 				if (!Array.isArray(msg)) return;
 				switch (msg[0]) {
+					case OP_YIELD:
+						yieldGenerator(worker, msg[1]);
+						break;
 					case OP_RESPONSE:
 						if (respond(worker, msg[1], msg[2])) {
 							standby(worker);
 						}
+						break;
+					case OP_GENERATOR:
+						startGenerator(worker);
 						break;
 					case OP_READY:
 						if (isInitializing) {
@@ -128,7 +137,7 @@ function ThreadPool(options) {
 	const createJob = (signal) => {
 		let job;
 		const promise = new Promise((resolve, reject) => {
-			job = { resolve, reject, cleanup: NOOP, willSend: undefined };
+			job = { resolve, reject, cleanup: NOOP, willSend: undefined, yield: undefined };
 		});
 
 		if (signal) {
@@ -203,6 +212,24 @@ function ThreadPool(options) {
 			return true;
 		}
 		return false;
+	};
+
+	const startGenerator = (worker) => {
+		const job = assignedJobs.get(worker);
+		if (job) {
+			const { controller, asyncIterable } = makeAsyncIterable();
+			job.resolve(asyncIterable);
+			job.resolve = controller.resolve;
+			job.reject = controller.reject;
+			job.yield = controller.yield;
+		}
+	};
+
+	const yieldGenerator = (worker, value) => {
+		const job = assignedJobs.get(worker);
+		if (job) {
+			job.yield(value);
+		}
 	};
 
 	const destroy = (err) => {

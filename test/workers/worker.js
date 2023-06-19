@@ -50,3 +50,19 @@ exports.unhandledRejection = async (message) => {
 	Promise.reject(new Error(message));
 	await new Promise(r => setTimeout(r, 100));
 };
+
+exports.generate = function* () {
+	yield 'foo';
+	yield 'bar';
+	yield 'baz';
+};
+
+exports.generateAsync = async function* () {
+	await new Promise(r => setTimeout(r, 5));
+	yield 'foo';
+	await new Promise(r => setTimeout(r, 5));
+	yield 'bar';
+	await new Promise(r => setTimeout(r, 5));
+	yield 'baz';
+	await new Promise(r => setTimeout(r, 5));
+};
