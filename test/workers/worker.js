@@ -34,3 +34,19 @@ exports.failAsync = async (message) => {
 exports.argv = () => {
 	return process.argv;
 };
+
+exports.exit = () => {
+	return process.exit();
+};
+
+exports.uncaughtException = async (message) => {
+	await new Promise(r => setTimeout(r, 10));
+	process.nextTick(() => { throw new Error(message); });
+	await new Promise(r => setTimeout(r, 100));
+};
+
+exports.unhandledRejection = async (message) => {
+	await new Promise(r => setTimeout(r, 10));
+	Promise.reject(new Error(message));
+	await new Promise(r => setTimeout(r, 100));
+};

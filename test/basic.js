@@ -227,6 +227,36 @@ describe('basic functionality', function () {
 				expect(err.message).to.equal('this worker is for testing');
 			});
 		});
+
+		describe('handles unexpected errors in workers', function () {
+			it('when an uncaught exception occurs', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.call('uncaughtException', 'foo').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('foo');
+				});
+			});
+			it('when an unhandled rejection occurs', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.call('unhandledRejection', 'foo').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('foo');
+				});
+			});
+			it('when a worker unexpectedly exits', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.call('exit').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('Worker thread exited prematurely');
+				});
+			});
+		});
 	});
 
 	describe('ThreadPool invoke() method', function () {
@@ -298,6 +328,36 @@ describe('basic functionality', function () {
 				});
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.equal('this worker is for testing');
+			});
+		});
+
+		describe('handles unexpected errors in workers', function () {
+			it('when an uncaught exception occurs', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.invoke('uncaughtException', { args: ['foo'] }).then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('foo');
+				});
+			});
+			it('when an unhandled rejection occurs', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.invoke('unhandledRejection', { args: ['foo'] }).then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('foo');
+				});
+			});
+			it('when a worker unexpectedly exits', async function () {
+				pool = new ThreadPool({ filename: WORKER });
+				await pool.invoke('exit').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('Worker thread exited prematurely');
+				});
 			});
 		});
 	});
