@@ -66,3 +66,11 @@ exports.generateAsync = async function* () {
 	yield 'baz';
 	await new Promise(r => setTimeout(r, 5));
 };
+
+exports.generateError = async function* () {
+	yield 'foo';
+	yield 'bar';
+	throw new Error('this is an error');
+};
+
+exports.generateNone = function* () {};
