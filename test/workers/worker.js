@@ -14,8 +14,14 @@ exports.concatAsync = async (a, b) => {
 	return Buffer.concat([a, b]);
 };
 
+let movedBuffer;
 exports.moveAsync = async (buffer) => {
+	movedBuffer = buffer;
 	return move(buffer, [buffer.buffer]);
+};
+
+exports.movedSizes = async () => {
+	return [movedBuffer.byteLength, movedBuffer.buffer.byteLength];
 };
 
 exports.sleep = async (ms) => {
@@ -74,3 +80,48 @@ exports.generateError = async function* () {
 };
 
 exports.generateNone = function* () {};
+
+exports.map = async function (arr, cb) {
+	return Promise.all(arr.map((x, i) => cb(x, i)));
+};
+
+exports.addLazy = async function (...args) {
+	let sum = 0;
+	for (let arg of args) {
+		if (typeof arg === 'function') {
+			sum += await arg();
+		} else {
+			sum += arg;
+		}
+	}
+	return sum;
+};
+
+exports.expectError = async (cb) => {
+	try {
+		await cb();
+	} catch (err) {
+		return err.message;
+	}
+	throw new Error('Callback should have thrown an exception');
+};
+
+let pendingPromise;
+exports.callLater = (cb) => {
+	setImmediate(() => {
+		pendingPromise = cb();
+		pendingPromise.catch(() => {});
+	});
+	return pendingPromise;
+};
+
+let currentValue = 1;
+exports.setLater = (cb, initialValue) => {
+	if (initialValue !== undefined) {
+		currentValue = initialValue;
+	}
+	cb().then((value) => {
+		currentValue = value;
+	});
+	return currentValue;
+};

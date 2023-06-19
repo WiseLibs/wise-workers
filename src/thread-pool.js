@@ -6,16 +6,10 @@ const EventEmitter = require('events');
 const Queue = require('./queue');
 const normalizeOptions = require('./normalize-options');
 const makeAsyncIterable = require('./make-async-iterable');
+const { OP_YIELD, OP_RESPONSE, OP_CALLBACK, OP_GENERATOR, OP_READY, WOP_REQUEST, WOP_CALLBACK } = require('./constants');
 
 const WORKER_SCRIPT = require.resolve('./worker');
 const NOOP = () => {};
-const OP_YIELD = crypto.randomBytes(4).readInt32LE();
-const OP_RESPONSE = crypto.randomBytes(4).readInt32LE();
-const OP_GENERATOR = crypto.randomBytes(4).readInt32LE();
-const OP_READY = crypto.randomBytes(4).readInt32LE();
-
-// TODO: implement callback support (functions in top-level args)
-// TODO: make sure callback args/returns can be moved values
 
 function ThreadPool(options) {
 	if (new.target == null) {
@@ -27,13 +21,9 @@ function ThreadPool(options) {
 	const workerOptions = {};
 	options = normalizeOptions(options, workerOptions);
 
-	// We include our own data within the workerData.
+	// We include the user's filename within the workerData.
 	// Our worker.js script will unwrap this, so the user will never know.
 	workerOptions.workerData = {
-		OP_YIELD,
-		OP_RESPONSE,
-		OP_GENERATOR,
-		OP_READY,
 		FILENAME: options.filename,
 		workerData: workerOptions.workerData,
 	};
@@ -71,7 +61,6 @@ function ThreadPool(options) {
 		const worker = new Worker(WORKER_SCRIPT, workerOptions)
 			.on('message', (msg) => {
 				if (isErrored) return;
-				if (!Array.isArray(msg)) return;
 				switch (msg[0]) {
 					case OP_YIELD:
 						yieldGenerator(worker, msg[1]);
@@ -80,6 +69,9 @@ function ThreadPool(options) {
 						if (respond(worker, msg[1], msg[2])) {
 							standby(worker);
 						}
+						break;
+					case OP_CALLBACK:
+						callCallback(worker, msg[1], msg[2], msg[3])
 						break;
 					case OP_GENERATOR:
 						startGenerator(worker);
@@ -137,7 +129,7 @@ function ThreadPool(options) {
 	const createJob = (signal) => {
 		let job;
 		const promise = new Promise((resolve, reject) => {
-			job = { resolve, reject, cleanup: NOOP, willSend: undefined, yield: undefined };
+			job = { resolve, reject, cleanup: NOOP, willSend: undefined, yield: undefined, callbacks: undefined };
 		});
 
 		if (signal) {
@@ -185,7 +177,9 @@ function ThreadPool(options) {
 		}
 
 		const { job, promise } = createJob(signal);
-		const msg = [methodName, args];
+		const { cbIndexes, callbacks } = extractCallbacks(args);
+		const msg = [WOP_REQUEST, methodName, args, cbIndexes];
+		job.callbacks = callbacks;
 
 		if (availableWorkers.length) {
 			const worker = availableWorkers.pop();
@@ -229,6 +223,22 @@ function ThreadPool(options) {
 		const job = assignedJobs.get(worker);
 		if (job) {
 			job.yield(value);
+		}
+	};
+
+	const callCallback = (worker, callId, index, args) => {
+		const job = assignedJobs.get(worker);
+		if (job) {
+			const callback = job.callbacks[index];
+			new Promise((resolve) => {
+				resolve(callback(...args));
+			}).then((value) => {
+				// TODO: support transferList for returned value
+				worker.postMessage([WOP_CALLBACK, callId, value, false]);
+			}, (err) => {
+				// TODO: support transferList for thrown err
+				worker.postMessage([WOP_CALLBACK, callId, err, true]);
+			});
 		}
 	};
 
@@ -290,6 +300,20 @@ function ThreadPool(options) {
 function deleteFromArray(arr, value) {
 	const index = arr.indexOf(value);
 	if (index >= 0) arr.splice(index, 1);
+}
+
+function extractCallbacks(args) {
+	const cbIndexes = [];
+	const callbacks = [];
+	for (let i = 0; i < args.length; ++i) {
+		const value = args[i];
+		if (typeof value === 'function') {
+			cbIndexes.push(i);
+			callbacks.push(value);
+			args[i] = undefined;
+		}
+	}
+	return { cbIndexes, callbacks };
 }
 
 util.inherits(ThreadPool, EventEmitter);

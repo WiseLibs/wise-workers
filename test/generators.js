@@ -14,7 +14,7 @@ describe('generator function support', function () {
 
 	after(async function () {
 		await pool.destroy();
-	})
+	});
 
 	it('resolves to an async iterable when calling a generator function', async function () {
 		const asyncIterable = await pool.call('generate');

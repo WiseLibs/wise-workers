@@ -14,7 +14,7 @@ describe('AbortSignal support', function () {
 
 	after(async function () {
 		await pool.destroy();
-	})
+	});
 
 	it('allows the signal option to stop a worker when calling invoke()', async function () {
 		const controller = new AbortController();

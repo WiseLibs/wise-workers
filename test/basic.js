@@ -7,6 +7,7 @@ const ThreadPool = require('..');
 const WORKER = require.resolve('./workers/worker.js');
 const INVALID_WORKER = require.resolve('./workers/invalid-worker.js');
 const INVALID_WORKER_ASYNC = require.resolve('./workers/invalid-worker-async.js');
+const INVALID_WORKER_EXPORT = require.resolve('./workers/invalid-worker-export.js');
 
 describe('basic functionality', function () {
 	let pool;
@@ -226,6 +227,20 @@ describe('basic functionality', function () {
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.equal('this worker is for testing');
 			});
+			it('when the worker does not export an object', async function () {
+				pool = new ThreadPool({ filename: INVALID_WORKER_EXPORT });
+				let err;
+				pool.on('error', (e) => { err = e; });
+
+				await pool.call('echo').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('Worker must export an object');
+				});
+				expect(err).to.be.an.instanceof(Error);
+				expect(err.message).to.equal('Worker must export an object');
+			});
 		});
 
 		describe('handles unexpected errors in workers', function () {
@@ -328,6 +343,20 @@ describe('basic functionality', function () {
 				});
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.equal('this worker is for testing');
+			});
+			it('when the worker does not export an object', async function () {
+				pool = new ThreadPool({ filename: INVALID_WORKER_EXPORT });
+				let err;
+				pool.on('error', (e) => { err = e; });
+
+				await pool.invoke('echo').then(() => {
+					throw new Error('Promise should have been rejected');
+				}, (err) => {
+					expect(err).to.be.an.instanceof(Error);
+					expect(err.message).to.equal('Worker must export an object');
+				});
+				expect(err).to.be.an.instanceof(Error);
+				expect(err.message).to.equal('Worker must export an object');
 			});
 		});
 
