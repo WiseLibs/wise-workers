@@ -18,6 +18,10 @@ exports.moveAsync = async (buffer) => {
 	return move(buffer, [buffer.buffer]);
 };
 
+exports.sleep = async (ms) => {
+	return new Promise(r => setTimeout(r, ms));
+};
+
 exports.fail = (message) => {
 	throw new Error(message);
 };

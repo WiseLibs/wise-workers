@@ -4,9 +4,9 @@ const EventEmitter = require('events');
 const { expect } = require('chai');
 const ThreadPool = require('..');
 
-const WORKER = require.resolve('./utilities/worker.js');
-const INVALID_WORKER = require.resolve('./utilities/invalid-worker.js');
-const INVALID_WORKER_ASYNC = require.resolve('./utilities/invalid-worker-async.js');
+const WORKER = require.resolve('./workers/worker.js');
+const INVALID_WORKER = require.resolve('./workers/invalid-worker.js');
+const INVALID_WORKER_ASYNC = require.resolve('./workers/invalid-worker-async.js');
 
 describe('basic functionality', function () {
 	let pool;
@@ -33,10 +33,10 @@ describe('basic functionality', function () {
 			expect(() => new ThreadPool({ filename: WORKER, maxThreads: 8.01 })).to.throw(TypeError);
 		});
 		it('does not accept relative paths for the filename', function () {
-			expect(() => new ThreadPool({ filename: './utilities/worker.js' })).to.throw(TypeError);
-			expect(() => new ThreadPool({ filename: './test/utilities/worker.js' })).to.throw(TypeError);
-			expect(() => new ThreadPool({ filename: 'utilities/worker.js' })).to.throw(TypeError);
-			expect(() => new ThreadPool({ filename: 'test/utilities/worker.js' })).to.throw(TypeError);
+			expect(() => new ThreadPool({ filename: './workers/worker.js' })).to.throw(TypeError);
+			expect(() => new ThreadPool({ filename: './test/workers/worker.js' })).to.throw(TypeError);
+			expect(() => new ThreadPool({ filename: 'workers/worker.js' })).to.throw(TypeError);
+			expect(() => new ThreadPool({ filename: 'test/workers/worker.js' })).to.throw(TypeError);
 		});
 		it('does not accept windows-style absolute paths for the filename', function () {
 			expect(() => new ThreadPool({ filename: path.win32.normalize(WORKER) })).to.throw(TypeError);
@@ -179,7 +179,14 @@ describe('basic functionality', function () {
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.equal('this is some error');
 			});
+			await pool.call('failAsync', 'this is some error').then(() => {
+				throw new Error('Promise should have been rejected');
+			}, (err) => {
+				expect(err).to.be.an.instanceof(Error);
+				expect(err.message).to.equal('this is some error');
+			});
 		});
+
 		describe('propagates errors thrown during worker initialization', function () {
 			it('when the worker file is not found', async function () {
 				pool = new ThreadPool({ filename: '/nonexistent/1212342dfsfffadsg3rte/fake.js' });
@@ -245,7 +252,14 @@ describe('basic functionality', function () {
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.equal('this is some error');
 			});
+			await pool.invoke('failAsync', { args: ['this is some error'] }).then(() => {
+				throw new Error('Promise should have been rejected');
+			}, (err) => {
+				expect(err).to.be.an.instanceof(Error);
+				expect(err.message).to.equal('this is some error');
+			});
 		});
+
 		describe('propagates errors thrown during worker initialization', function () {
 			it('when the worker file is not found', async function () {
 				pool = new ThreadPool({ filename: '/nonexistent/1212342dfsfffadsg3rte/fake.js' });
@@ -326,7 +340,7 @@ describe('basic functionality', function () {
 			await pool.destroy();
 
 			await Promise.all([promise1, promise2, promise3].map((promise) => {
-				promise.then(() => {
+				return promise.then(() => {
 					throw new Error('Promise should have been rejected');
 				}, (err) => {
 					expect(err).to.be.an.instanceof(Error);
@@ -348,7 +362,7 @@ describe('basic functionality', function () {
 			await pool.destroy(error);
 
 			await Promise.all([promise1, promise2, promise3].map((promise) => {
-				promise.then(() => {
+				return promise.then(() => {
 					throw new Error('Promise should have been rejected');
 				}, (err) => {
 					expect(err).to.equal(error);

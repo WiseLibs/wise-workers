@@ -25,7 +25,8 @@ module.exports = (options, workerOptions) => {
 	}
 
 	if (options.minThreads === undefined) {
-		options.minThreads = PHYSICAL_CORES >> 1 || 1;
+		const max = Number.isInteger(options.maxThreads) ? options.maxThreads : 0xffffffff;
+		options.minThreads = Math.min(max, PHYSICAL_CORES >> 1 || 1);
 	} else {
 		if (!Number.isInteger(options.minThreads)) {
 			throw new TypeError('Expected options.minThreads to be an integer');
@@ -36,7 +37,7 @@ module.exports = (options, workerOptions) => {
 	}
 
 	if (options.maxThreads === undefined) {
-		options.maxThreads = PHYSICAL_CORES;
+		options.maxThreads = Math.max(options.minThreads, PHYSICAL_CORES);
 	} else {
 		if (!Number.isInteger(options.maxThreads)) {
 			throw new TypeError('Expected options.maxThreads to be an integer');
