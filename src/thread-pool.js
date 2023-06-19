@@ -222,7 +222,7 @@ function ThreadPool(options) {
 				job.cleanup();
 			}
 		}
-		return Promise.all(allWorkers.map(worker => worker.terminate()));
+		return Promise.all(allWorkers.map(worker => worker.terminate())).then(NOOP);
 	};
 
 	Object.defineProperties(this, {

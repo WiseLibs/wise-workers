@@ -10,10 +10,12 @@
   },
   "license": "MIT",
   "main": "src/index.js",
+  "types": "src/types.d.ts",
   "scripts": {
     "test": "mocha --exit --slow=100 --timeout=5000"
   },
   "devDependencies": {
+    "@types/node": "^20.3.1",
     "chai": "^4.3.7",
     "mocha": "^10.2.0"
   },
