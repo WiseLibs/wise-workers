@@ -1,12 +1,12 @@
 # wise-workers
 
-A convenient worker thread pool for Node.js, allowing you to utilize all your CPUs. `wise-workers` requires no configuration and has many convenient features:
+A worker thread pool for Node.js, for CPU-bound tasks. It requires no configuration and has many powerful features:
 
-- **Functions can be passed to workers.** They become `async` functions in the worker thread, using [MessagePort](https://nodejs.org/docs/latest/api/worker_threads.html#class-messageport) under the hood.
 - **Worker functions can be [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) or [async generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*)**, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread cannot pause the generator function).
-- **Specific tasks can be aborted** using an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
-- **Crashed threads are automatically respawned**, unless they crash during startup.
-- **Data can be efficiently moved between threads (zero-copy).**
+- **Callback functions can be passed to workers.** They become `async` functions in the worker thread, using [MessagePort](https://nodejs.org/docs/latest/api/worker_threads.html#class-messageport) for communication under the hood.
+- **Tasks can be aborted** using an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+- **Crashed threads are automatically respawned**, unless they're crashing during startup.
+- **Data can be efficiently moved** between threads (zero-copy).
 
 ## Installation
 
@@ -17,8 +17,6 @@ npm install wise-workers
 > Requires Node.js v14.x.x or later.
 
 ## Usage
-
-Use `pool.call()` to call an exported function in a worker thread.
 
 ```js
 const ThreadPool = require('wise-workers');
@@ -36,14 +34,14 @@ exports.add = (a, b) => a + b;
 
 ### Zero-copy example
 
-`pool.invoke()` is like `pool.call()`, but it accepts more options.
-
 ```js
 const ThreadPool = require('wise-workers');
 
 const pool = new ThreadPool({ filename: require.resolve('./worker') });
 
 const data = Buffer.alloc(1024 * 1024);
+
+// pool.invoke() allows you to provide more options than pool.call()
 const compressedData = await pool.invoke('compress', {
 	args: [data],
 	transferList: [data.buffer], // Pass the ArrayBuffer in transferList
