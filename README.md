@@ -3,7 +3,7 @@
 A worker thread pool for CPU-bound tasks. It requires no configuration and has many powerful features:
 
 - [Generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) and [AsyncGenerator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) function support
-    * Worker functions can be [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) functions or [async generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) functions, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread cannot pause the generator function).
+    * Worker functions can be [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) functions or [async generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) functions, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread does not pause the generator function).
 - Functions (callbacks) as arguments
     * Functions can be passed to worker tasks. They become `async` functions in the worker thread, using [MessagePort](https://nodejs.org/docs/latest/api/worker_threads.html#class-messageport) for communication under the hood.
 - Cancellation support
@@ -37,7 +37,7 @@ const result = await pool.call('add', 2, 2); // => 4
 exports.add = (a, b) => a + b;
 ```
 
-### Zero-copy example
+### Example: Zero-copy
 
 ```js
 const ThreadPool = require('wise-workers');
@@ -67,7 +67,7 @@ exports.compress = (data) => {
 };
 ```
 
-### Generator example
+### Example: Generator function
 
 When calling a generator function, you will get an [async iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of) object.
 
@@ -110,7 +110,7 @@ exports.readFile = function* (filename, chunkSize = 1024 * 16) {
 };
 ```
 
-### Callback function example
+### Example: Callback function
 
 You an pass callback functions to the worker, but they must be in the top-level arguments (they can't be nested within some other object). Callback functions can also be `async` functions.
 
@@ -141,7 +141,7 @@ exports.search = async (searchTerm, filter) => {
 
 > Currently, callback functions do not support "zero-copy" data transfer in their arguments or return values. This restriction may be lifted in the future.
 
-### AbortSignal example
+### Example: AbortSignal (cancellation)
 
 Calling `controller.abort()` will forcefully terminate the thread that's assigned to the associated task.
 
