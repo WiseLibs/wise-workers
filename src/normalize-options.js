@@ -17,10 +17,10 @@ module.exports = (options, workerOptions) => {
 	if (typeof options.filename !== 'string') {
 		throw new TypeError('Expected options.filename to be a string');
 	}
-	if (!path.posix.isAbsolute(options.filename)) {
-		throw new TypeError('Filename must be a POSIX-style absolute path');
+	if (!path.isAbsolute(options.filename)) {
+		throw new TypeError('Filename must be an absolute path');
 	}
-	if (!['.js', '.mjs', '.cjs', ''].includes(path.posix.extname(options.filename))) {
+	if (!['.js', '.mjs', '.cjs', ''].includes(path.extname(options.filename))) {
 		throw new TypeError('Filename extension must be either ".js", ".mjs", or ".cjs"');
 	}
 

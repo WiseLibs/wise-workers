@@ -177,7 +177,7 @@ exports.infiniteLoop = () => {
 Creates a new thread pool. The following options are supported:
 
 - `filename` (string, required)
-	* The absolute path to the worker script or module. Both CommonJS and ESM modules are supported. Even on Windows machines, a POSIX-style path is required.
+	* The absolute path to the worker script or module. Both CommonJS and ESM modules are supported.
 - `minThreads` (number, optional)
 	* The minimum number of worker threads to keep in the pool. By default, this is equal to **half** the number of physical CPUs on the machine.
 - `maxThreads` (number, optional)
