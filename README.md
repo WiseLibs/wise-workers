@@ -203,7 +203,7 @@ This is the same as `pool.call()`, except it supports more options:
 - `args` (Array, optional)
 	* The arguments to pass to the worker function.
 - `transferList` (Array, optional)
-	* A list of [transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) within `args` that should be moved, rather than copied ("zero-copy") to the worker thread.
+	* A list of [transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) within `args` that should be moved, rather than copied to the worker thread ("zero-copy").
 - `signal` ([AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal), optional)
 	* An AbortSignal that, when aborted, will forcefully stop this task. If the signal is aborted after the task completes, nothing happens.
 
