@@ -1,6 +1,6 @@
 # wise-workers [![test](https://github.com/WiseLibs/wise-workers/actions/workflows/test.yml/badge.svg)](https://github.com/WiseLibs/wise-workers/actions/workflows/test.yml)
 
-A easy-to-use worker thread pool, for CPU-bound tasks. It requires no configuration and has many powerful features:
+A worker thread pool for CPU-bound tasks. It requires no configuration and has many powerful features:
 
 - [Generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) and [AsyncGenerator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) function support
     * Worker functions can be [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) functions or [async generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) functions, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread cannot pause the generator function).
