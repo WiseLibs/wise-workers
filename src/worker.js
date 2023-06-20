@@ -1,4 +1,5 @@
 'use strict';
+const url = require('url');
 const worker = require('worker_threads');
 const Movable = require('./movable');
 const { OP_YIELD, OP_RESPONSE, OP_CALLBACK, OP_GENERATOR, OP_READY, WOP_REQUEST, WOP_CALLBACK } = require('./constants');
@@ -24,8 +25,13 @@ worker.workerData = worker.workerData.workerData;
 worker.parentPort = new worker.MessageChannel().port1;
 
 // Load the user's worker script. It may export a promise.
-// TODO: add support for ESM files
-Promise.resolve(require(FILENAME)).then((methods) => {
+new Promise((resolve) => {
+	try {
+		resolve(require(FILENAME));
+	} catch (_) {
+		resolve(import(url.pathToFileURL(FILENAME).href));
+	}
+}).then((methods) => {
 	if (typeof methods !== 'object' || methods === null) {
 		throw new TypeError('Worker must export an object');
 	}

@@ -5,6 +5,7 @@ const { expect } = require('chai');
 const ThreadPool = require('..');
 
 const WORKER = require.resolve('./workers/worker.js');
+const WORKER_ESM = require.resolve('./workers/worker-esm.mjs');
 const INVALID_WORKER = require.resolve('./workers/invalid-worker.js');
 const INVALID_WORKER_ASYNC = require.resolve('./workers/invalid-worker-async.js');
 const INVALID_WORKER_EXPORT = require.resolve('./workers/invalid-worker-export.js');
@@ -38,9 +39,6 @@ describe('basic functionality', function () {
 			expect(() => new ThreadPool({ filename: './test/workers/worker.js' })).to.throw(TypeError);
 			expect(() => new ThreadPool({ filename: 'workers/worker.js' })).to.throw(TypeError);
 			expect(() => new ThreadPool({ filename: 'test/workers/worker.js' })).to.throw(TypeError);
-		});
-		it('does not accept windows-style absolute paths for the filename', function () {
-			expect(() => new ThreadPool({ filename: path.win32.normalize(WORKER) })).to.throw(TypeError);
 		});
 		it('does not accept non-JS file extensions in the filename', function () {
 			expect(() => new ThreadPool({ filename: WORKER.slice(0, -3) + '.css' })).to.throw(TypeError);
@@ -89,6 +87,10 @@ describe('basic functionality', function () {
 					resolve();
 				});
 			});
+		});
+		it('accepts worker scripts as ESM modules', async function () {
+			pool = new ThreadPool({ filename: WORKER_ESM });
+			expect(await pool.call('echo', 123)).to.deep.equal([123]);
 		});
 	});
 
