@@ -46,6 +46,19 @@ function ThreadPool(options) {
 		}
 	};
 
+	const spawnIfBeneficial = () => {
+		if (allWorkers.length >= options.maxThreads) return;
+		if (allWorkers.length >= assignedJobs.size + queue.size) return;
+		try {
+			spawn();
+		} catch (err) {
+			// This can occur within the invoke() method, which may be called
+			// directly after constructing a new ThreadPool, so we delay it to
+			// given callers a chance to listen for the "error" event.
+			process.nextTick(() => fatal(err));
+		}
+	};
+
 	const spawn = () => {
 		let isInitializing = true;
 		let isErrored = false;
@@ -188,11 +201,9 @@ function ThreadPool(options) {
 			worker.ref();
 			return promise;
 		} else {
-			if (allWorkers.length < options.maxThreads) {
-				spawn();
-			}
 			job.willSend = [msg, transferList];
 			queue.push(job);
+			spawnIfBeneficial();
 			return promise;
 		}
 	};
