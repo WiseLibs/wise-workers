@@ -1,12 +1,17 @@
-# wise-workers
+# wise-workers [![test](https://github.com/WiseLibs/wise-workers/actions/workflows/test.yml/badge.svg)](https://github.com/WiseLibs/wise-workers/actions/workflows/test.yml)
 
-A worker thread pool for Node.js, for CPU-bound tasks. It requires no configuration and has many powerful features:
+A easy-to-use worker thread pool, for CPU-bound tasks. It requires no configuration and has many powerful features:
 
-- **Worker functions can be [generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) or [async generators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*)**, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread cannot pause the generator function).
-- **Callback functions can be passed to workers.** They become `async` functions in the worker thread, using [MessagePort](https://nodejs.org/docs/latest/api/worker_threads.html#class-messageport) for communication under the hood.
-- **Tasks can be aborted** using an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
-- **Crashed threads are automatically respawned**, unless they're crashing during startup.
-- **Data can be efficiently moved** between threads (zero-copy).
+- [Generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) and [AsyncGenerator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) function support
+    * Worker functions can be [generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*) functions or [async generator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*) functions, making it easy to stream results back to the main thread. Iteration happens eagerly, to maximize parallelism (i.e., the main thread cannot pause the generator function).
+- Functions (callbacks) as arguments
+    * Functions can be passed to worker tasks. They become `async` functions in the worker thread, using [MessagePort](https://nodejs.org/docs/latest/api/worker_threads.html#class-messageport) for communication under the hood.
+- Cancellation support
+    * Tasks can be aborted using an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+- Automatic thread management
+    * Crashed threads are automatically respawned, unless they're crashing during startup (to prevent an infinite spawn loop).
+- Zero-copy data transfer
+    * Data can be efficiently moved between threads without copying it. This is beneficial to performance when passing large [Buffers](https://nodejs.org/api/buffer.html) between threads.
 
 ## Installation
 
@@ -225,4 +230,4 @@ The returned promise resolves when all threads have finished shutting down.
 
 ## License
 
-[MIT](https://github.com/WiseLibs/wise-river/blob/master/LICENSE)
+[MIT](https://github.com/WiseLibs/wise-workers/blob/master/LICENSE)
