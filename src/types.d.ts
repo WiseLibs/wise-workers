@@ -13,6 +13,8 @@ declare class ThreadPool extends EventEmitter {
 	call<T = any>(methodName: string, ...args: any[]): Promise<T>;
 	invoke<T = any>(methodName: string, options?: ThreadPool.InvokeOptions): Promise<T>;
 	destroy(error?: Error): Promise<void>;
+
+	static move<T = any>(value: T, transferList: ReadonlyArray<any>): ThreadPool.Movable<T>;
 }
 
 declare namespace ThreadPool {
@@ -32,6 +34,10 @@ declare namespace ThreadPool {
 		args?: ReadonlyArray<any>;
 		transferList?: ReadonlyArray<any>;
 		signal?: AbortSignal;
+	}
+	export interface Movable<T = any> {
+		readonly value: T;
+		readonly transferList: ReadonlyArray<any>;
 	}
 }
 
