@@ -177,7 +177,7 @@ Creates a new thread pool. The following options are supported:
 	* The minimum number of worker threads to keep in the pool. By default, this is equal to **half** the number of physical CPUs on the machine.
 - `maxThreads` (number, optional)
 	* The maximum number of worker threads to keep in the pool. By default, this is equal to the number of physical CPUs on the machine.
-- The following options which are passed directly to [`new Worker()`](https://nodejs.org/docs/latest/api/worker_threads.html#new-workerfilename-options) under the hood:
+- The following options are passed directly to [`new Worker()`](https://nodejs.org/docs/latest/api/worker_threads.html#new-workerfilename-options) under the hood:
 	* `execArgv`
 	* `argv`
 	* `env`
