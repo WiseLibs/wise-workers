@@ -215,7 +215,7 @@ If an `error` object is provided, all pending tasks will be rejected with it. Ot
 
 The returned promise resolves when all threads have finished shutting down.
 
-### Properties
+### ThreadPool properties
 
 - `pool.filename`: The filename of the worker script being used.
 - `pool.threadCount`: The number of threads currently spawned within the pool.
