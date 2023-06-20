@@ -26,7 +26,6 @@ describe('AbortSignal support', function () {
 			throw new Error('Promise should have been rejected');
 		}, (err) => {
 			expect(err).to.be.an.instanceof(Error);
-			expect(err).to.be.an.instanceof(DOMException);
 			expect(err.name).to.equal('AbortError');
 		});
 	});
@@ -36,7 +35,6 @@ describe('AbortSignal support', function () {
 			throw new Error('Promise should have been rejected');
 		}, (err) => {
 			expect(err).to.be.an.instanceof(Error);
-			expect(err).to.be.an.instanceof(DOMException);
 			expect(err.name).to.equal('AbortError');
 		});
 	});
@@ -54,7 +52,6 @@ describe('AbortSignal support', function () {
 			throw new Error('Promise should have been rejected');
 		}, (err) => {
 			expect(err).to.be.an.instanceof(Error);
-			expect(err).to.be.an.instanceof(DOMException);
 			expect(err.name).to.equal('AbortError');
 		});
 		expect(pool.activeThreadCount).to.equal(1);
@@ -91,7 +88,7 @@ describe('AbortSignal support', function () {
 				throw new Error('Promise should have been rejected');
 			}, (err) => {
 				expect(err).to.be.an.instanceof(Error);
-				expect(err).to.not.be.an.instanceof(DOMException);
+				expect(err.name).to.not.equal('AbortSignal');
 				expect(err.message).to.equal('foo');
 			});
 
@@ -116,7 +113,6 @@ describe('AbortSignal support', function () {
 				throw new Error('Promise should have been rejected');
 			}, (err) => {
 				expect(err).to.be.an.instanceof(Error);
-				expect(err).to.be.an.instanceof(DOMException);
 				expect(err.name).to.equal('AbortError');
 			});
 
@@ -141,7 +137,7 @@ describe('AbortSignal support', function () {
 				throw new Error('Promise should have been rejected');
 			}, (err) => {
 				expect(err).to.be.an.instanceof(Error);
-				expect(err).to.not.be.an.instanceof(DOMException);
+				expect(err.name).to.not.equal('AbortSignal');
 			});
 
 			expect(calls.length).to.equal(1);

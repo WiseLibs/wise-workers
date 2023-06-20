@@ -19,7 +19,7 @@ A worker thread pool for CPU-bound tasks. It requires no configuration and has m
 npm install wise-workers
 ```
 
-> Requires Node.js v14.x.x or later.
+> Requires Node.js v16.x.x or later.
 
 ## Usage
 
