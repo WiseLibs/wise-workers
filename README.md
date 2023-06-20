@@ -43,8 +43,8 @@ const data = Buffer.alloc(1024 * 1024);
 
 // pool.invoke() allows you to provide more options than pool.call()
 const compressedData = await pool.invoke('compress', {
-	args: [data],
-	transferList: [data.buffer], // Pass the ArrayBuffer in the transferList
+    args: [data],
+    transferList: [data.buffer], // Pass the ArrayBuffer in the transferList
 });
 ```
 
@@ -55,10 +55,10 @@ const zlib = require('zlib');
 const { move } = require('wise-workers');
 
 exports.compress = (data) => {
-	const compressedData = zlib.gzipSync(data);
+    const compressedData = zlib.gzipSync(data);
 
-	// Use move() to include a transferList in the return value.
-	return move(compressedData, [compressedData.buffer]);
+    // Use move() to include a transferList in the return value.
+    return move(compressedData, [compressedData.buffer]);
 };
 ```
 
@@ -74,7 +74,7 @@ const pool = new ThreadPool({ filename: require.resolve('./worker') });
 const asyncIterable = await pool.call('readFile', 'data.csv');
 
 for await (const chunk of asyncIterable) {
-	console.log(`got chunk of size ${chunk.byteLength} bytes`);
+    console.log(`got chunk of size ${chunk.byteLength} bytes`);
 }
 ```
 
@@ -85,23 +85,23 @@ const fs = require('fs');
 const { move } = require('wise-workers');
 
 exports.readFile = function* (filename, chunkSize = 1024 * 16) {
-	const fd = fs.openSync(filename);
-	try {
-		while (true) {
-			const buffer = Buffer.alloc(chunkSize);
-			const bytesRead = fs.readSync(fd, buffer, 0, chunkSize);
-			if (bytesRead > 0) {
-				const chunk = buffer.subarray(0, bytesRead);
-				// You can move() yielded values too
-				yield move(chunk, [chunk.buffer]);
-			}
-			if (bytesRead < chunkSize) {
-				break;
-			}
-		}
-	} finally {
-		fs.closeSync(fd);
-	}
+    const fd = fs.openSync(filename);
+    try {
+        while (true) {
+            const buffer = Buffer.alloc(chunkSize);
+            const bytesRead = fs.readSync(fd, buffer, 0, chunkSize);
+            if (bytesRead > 0) {
+                const chunk = buffer.subarray(0, bytesRead);
+                // You can move() yielded values too
+                yield move(chunk, [chunk.buffer]);
+            }
+            if (bytesRead < chunkSize) {
+                break;
+            }
+        }
+    } finally {
+        fs.closeSync(fd);
+    }
 };
 ```
 
@@ -116,7 +116,7 @@ const pool = new ThreadPool({ filename: require.resolve('./worker') });
 
 const allowedList = new Set(getHugeDataset());
 const result = await pool.call('search', searchTerm, (value) => {
-	return allowedList.has(value);
+    return allowedList.has(value);
 });
 ```
 
@@ -124,13 +124,13 @@ const result = await pool.call('search', searchTerm, (value) => {
 
 ```js
 exports.search = async (searchTerm, filter) => {
-	const matches = [];
-	for (const match of searchFor(searchTerm)) {
-		if (await filter(match)) {
-			matches.push(match);
-		}
-	}
-	return matches;
+    const matches = [];
+    for (const match of searchFor(searchTerm)) {
+        if (await filter(match)) {
+            matches.push(match);
+        }
+    }
+    return matches;
 };
 ```
 
@@ -147,11 +147,11 @@ const pool = new ThreadPool({ filename: require.resolve('./worker') });
 
 const controller = new AbortController();
 setTimeout(() => {
-	controller.abort();
+    controller.abort();
 }, 1000);
 
 await pool.invoke('infiniteLoop', {
-	signal: controller.signal,
+    signal: controller.signal,
 });
 ```
 
@@ -159,7 +159,7 @@ await pool.invoke('infiniteLoop', {
 
 ```js
 exports.infiniteLoop = () => {
-	while (true) {}
+    while (true) {}
 };
 ```
 
