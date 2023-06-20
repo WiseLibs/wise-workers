@@ -138,7 +138,7 @@ exports.search = async (searchTerm, filter) => {
 
 ### AbortSignal example
 
-Calling `controller.abort()` will forcefully terminate the thread that's assigned to the aborted task.
+Calling `controller.abort()` will forcefully terminate the thread that's assigned to the associated task.
 
 ```js
 const ThreadPool = require('wise-workers');
