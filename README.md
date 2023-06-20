@@ -107,7 +107,7 @@ exports.readFile = function* (filename, chunkSize = 1024 * 16) {
 
 ### Callback function example
 
-You an pass callback functions to the worker, but they must be in the top-level arguments (they can't be nested within some other object). Callback functions can also be `async`.
+You an pass callback functions to the worker, but they must be in the top-level arguments (they can't be nested within some other object). Callback functions can also be `async` functions.
 
 ```js
 const ThreadPool = require('wise-workers');
