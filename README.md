@@ -44,7 +44,7 @@ const data = Buffer.alloc(1024 * 1024);
 // pool.invoke() allows you to provide more options than pool.call()
 const compressedData = await pool.invoke('compress', {
 	args: [data],
-	transferList: [data.buffer], // Pass the ArrayBuffer into transferList
+	transferList: [data.buffer], // Pass the ArrayBuffer in the transferList
 });
 ```
 
@@ -107,7 +107,7 @@ exports.readFile = function* (filename, chunkSize = 1024 * 16) {
 
 ### Callback function example
 
-You an pass callback functions to the worker, but they must be in the top-level arguments (they can't be nested within some other object). Async callback functions are also supported.
+You an pass callback functions to the worker, but they must be in the top-level arguments (they can't be nested within some other object). Callback functions can also be `async`.
 
 ```js
 const ThreadPool = require('wise-workers');
