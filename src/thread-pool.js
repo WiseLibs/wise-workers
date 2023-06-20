@@ -102,7 +102,7 @@ function ThreadPool(options) {
 				}
 			});
 
-		worker.unref();
+		worker.ref();
 		allWorkers.push(worker);
 	};
 
