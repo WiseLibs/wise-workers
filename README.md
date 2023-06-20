@@ -134,7 +134,7 @@ exports.search = async (searchTerm, filter) => {
 };
 ```
 
-> Currently, callback functions do not support "zero-copy" data transfer in its arguments or return value. This restriction may be lifted in the future.
+> Currently, callback functions do not support "zero-copy" data transfer in their arguments or return values. This restriction may be lifted in the future.
 
 ### AbortSignal example
 
