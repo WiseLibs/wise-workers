@@ -211,7 +211,7 @@ This is the same as `pool.call()`, except it supports more options:
 
 Destroys the thread pool, cancelling any pending tasks and permanently terminating all threads. After being destroyed, the thread pool is no longer usable.
 
-If an `error` is provided, all pending tasks will be rejected with it. Otherwise, a default error is used.
+If an `error` object is provided, all pending tasks will be rejected with it. Otherwise, a default error is used.
 
 The returned promise resolves when all threads have finished shutting down.
 
