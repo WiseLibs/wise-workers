@@ -44,7 +44,7 @@ const data = Buffer.alloc(1024 * 1024);
 // pool.invoke() allows you to provide more options than pool.call()
 const compressedData = await pool.invoke('compress', {
 	args: [data],
-	transferList: [data.buffer], // Pass the ArrayBuffer in transferList
+	transferList: [data.buffer], // Pass the ArrayBuffer into transferList
 });
 ```
 
@@ -92,6 +92,7 @@ exports.readFile = function* (filename, chunkSize = 1024 * 16) {
 			const bytesRead = fs.readSync(fd, buffer, 0, chunkSize);
 			if (bytesRead > 0) {
 				const chunk = buffer.subarray(0, bytesRead);
+				// You can move() yielded values too
 				yield move(chunk, [chunk.buffer]);
 			}
 			if (bytesRead < chunkSize) {
