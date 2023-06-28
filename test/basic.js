@@ -159,6 +159,10 @@ describe('basic functionality', function () {
 				});
 			});
 		});
+		it('has static property: PHYSICAL_CORES', async function () {
+			expect(ThreadPool.PHYSICAL_CORES).to.be.a('number');
+			expect(ThreadPool.PHYSICAL_CORES).to.be.above(0);
+		});
 	});
 
 	describe('ThreadPool call() method', function () {

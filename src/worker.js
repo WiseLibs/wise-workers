@@ -1,5 +1,4 @@
 'use strict';
-const url = require('url');
 const worker = require('worker_threads');
 const Movable = require('./movable');
 const { OP_YIELD, OP_RESPONSE, OP_CALLBACK, OP_GENERATOR, OP_READY, WOP_REQUEST, WOP_CALLBACK } = require('./constants');
@@ -29,7 +28,7 @@ new Promise((resolve) => {
 	try {
 		resolve(require(FILENAME));
 	} catch (_) {
-		resolve(import(url.pathToFileURL(FILENAME).href));
+		resolve(import(require('url').pathToFileURL(FILENAME).href));
 	}
 }).then((methods) => {
 	if (typeof methods !== 'object' || methods === null) {

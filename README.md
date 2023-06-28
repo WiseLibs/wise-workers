@@ -228,6 +228,10 @@ The returned promise resolves when all threads have finished shutting down.
 - `pool.pendingTaskCount`: The number of pending tasks yet to be resolved.
 - `pool.destroyed`: Whether or not the thread pool is destroyed (boolean).
 
+#### Static properties
+
+- `ThreadPool.PHYSICAL_CORES`: The number of physical CPU cores detected on the machine. This number is used to calculate defaults for `minThreads` and `maxThreads` when constructing a ThreadPool.
+
 ## License
 
 [MIT](https://github.com/WiseLibs/wise-workers/blob/master/LICENSE)
