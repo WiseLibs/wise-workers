@@ -60,7 +60,9 @@ function invoke(methods, methodName, args, cbIndexes) {
 		if (typeof method !== 'function') {
 			throw new Error(`Method "${methodName}" not found on worker`);
 		}
-		if (method instanceof GeneratorFunction || method instanceof AsyncGeneratorFunction) {
+		if (method instanceof AsyncGeneratorFunction) {
+			resolve(runAsyncGenerator(method, args));
+		} else if (method instanceof GeneratorFunction) {
 			resolve(runGenerator(method, args));
 		} else {
 			resolve(method(...args));
@@ -83,7 +85,19 @@ function respond(value, isFailure) {
 	parentPort.postMessage([OP_RESPONSE, value, isFailure], transferList);
 }
 
-async function runGenerator(method, args) {
+function runGenerator(method, args) {
+	parentPort.postMessage([OP_GENERATOR]);
+	for (let value of method(...args)) {
+		let transferList;
+		if (value instanceof Movable) {
+			transferList = value.transferList;
+			value = value.value;
+		}
+		parentPort.postMessage([OP_YIELD, value], transferList);
+	}
+}
+
+async function runAsyncGenerator(method, args) {
 	parentPort.postMessage([OP_GENERATOR]);
 	for await (let value of method(...args)) {
 		let transferList;

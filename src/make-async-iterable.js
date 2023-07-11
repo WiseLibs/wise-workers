@@ -47,7 +47,7 @@ module.exports = () => {
 
 	const controller = {
 		resolve: () => {
-			if (!isDone) {
+			if (!isEnded) {
 				isEnded = true;
 				onFinish();
 			}
