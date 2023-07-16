@@ -69,6 +69,9 @@ function ThreadPool(options) {
 			deleteFromArray(availableWorkers, worker);
 			worker.terminate(); // Required for AbortSignal handling and destroy()
 			respond(worker, err, true) || fatal(err, !isInitializing);
+			if (!isDestroyed && !isInitializing) {
+				this.emit(`online:${this.onlineThreadCount}`);
+			}
 		};
 
 		const worker = new Worker(WORKER_SCRIPT, workerOptions)
@@ -93,6 +96,7 @@ function ThreadPool(options) {
 						if (isInitializing) {
 							isInitializing = false;
 							standby(worker);
+							this.emit(`online:${this.onlineThreadCount}`);
 						}
 						break;
 				}
@@ -110,6 +114,7 @@ function ThreadPool(options) {
 				} else {
 					if (!isErrored) {
 						respond(worker, new Error('Worker thread exited prematurely'), true);
+						isDestroyed || this.emit(`online:${this.onlineThreadCount}`);
 					}
 					spawnAsNeeded();
 				}
@@ -261,6 +266,9 @@ function ThreadPool(options) {
 			if (err == null) {
 				err = new Error('Thread pool was destroyed');
 			}
+			if (this.onlineThreadCount) {
+				process.nextTick(() => this.emit('online:0'));
+			}
 			for (const worker of allWorkers) {
 				worker.emit('error', err);
 			}
@@ -280,6 +288,10 @@ function ThreadPool(options) {
 		},
 		threadCount: {
 			get: () => allWorkers.length,
+			enumerable: true,
+		},
+		onlineThreadCount: {
+			get: () => availableWorkers.length + assignedJobs.size,
 			enumerable: true,
 		},
 		activeThreadCount: {

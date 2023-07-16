@@ -191,7 +191,10 @@ Creates a new thread pool. The following options are supported:
 	* `trackUnmanagedFds`
 	* `name`
 
-ThreadPool is an [EventEmitter](https://nodejs.org/api/events.html#class-eventemitter). The only event it emits is `error`, which occurs if a worker thread crashes unexpectedly.
+ThreadPool is an [EventEmitter](https://nodejs.org/api/events.html#class-eventemitter). It emits the following events:
+
+- `error`: This occurs if a worker crashes unexpectedly. If this occurs while a worker is starting up, the ThreadPool will be destroyed.
+- `online:n`: Where `n` is an integer, these events occur when the number of online threads changes (i.e., when a new thread comes online or when an existing thread goes offline).
 
 ### pool.call(*methodName*, [*...args*]) -> *promise*
 
@@ -224,6 +227,7 @@ The returned promise resolves when all threads have finished shutting down.
 
 - `pool.filename`: The filename of the worker script being used.
 - `pool.threadCount`: The number of threads currently spawned within the pool.
+- `pool.onlineThreadCount`: The number of threads which are fully online, which means they have completed their initialization/startup and are capable of handling tasks.
 - `pool.activeThreadCount`: The number of threads which are busy with a pending task.
 - `pool.pendingTaskCount`: The number of pending tasks yet to be resolved.
 - `pool.destroyed`: Whether or not the thread pool is destroyed (boolean).

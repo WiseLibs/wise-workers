@@ -85,6 +85,10 @@ exports.map = async function (arr, cb) {
 	return Promise.all(arr.map((x, i) => cb(x, i)));
 };
 
+exports.call = async function (cb) {
+	return cb();
+};
+
 exports.addLazy = async function (...args) {
 	let sum = 0;
 	for (let arg of args) {

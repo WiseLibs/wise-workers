@@ -109,6 +109,60 @@ describe('basic functionality', function () {
 			await pool.call('add', 5, 7);
 			expect(pool.threadCount).to.equal(1);
 		});
+		it('has property: onlineThreadCount', async function () {
+			pool = new ThreadPool({ filename: WORKER, minThreads: 3, maxThreads: 3 });
+			expect(pool.onlineThreadCount).to.equal(0);
+
+			let gotOnline0 = 0;
+			let gotOnline1 = 0;
+			let gotOnline2 = 0;
+			let gotOnline3 = 0;
+			pool.on('online:0', () => { gotOnline0 += 1; });
+			pool.on('online:1', () => { gotOnline1 += 1; });
+			pool.on('online:2', () => { gotOnline2 += 1; });
+			pool.on('online:3', () => { gotOnline3 += 1; });
+
+			await pool.call('add', 5, 7);
+			expect(pool.onlineThreadCount).to.be.above(0);
+			expect(gotOnline0).to.equal(0);
+			expect(gotOnline1).to.equal(1);
+
+			let sum = 0;
+			const resolves = [];
+			await Promise.all([...Array(3)].map(async () => {
+				sum += await pool.call('call', () => new Promise((resolve) => {
+					resolves.push(resolve);
+					if (resolves.length === 3) {
+						expect(pool.onlineThreadCount).to.equal(3);
+						for (const resolve of resolves) {
+							resolve(7);
+						}
+					}
+				}));
+			}));
+
+			expect(sum).to.equal(7);
+			expect(pool.onlineThreadCount).to.equal(3);
+			expect(gotOnline0).to.equal(0);
+			expect(gotOnline1).to.equal(1);
+			expect(gotOnline2).to.equal(1);
+			expect(gotOnline3).to.equal(1);
+
+			await pool.call('uncaughtException', 'foo').catch(() => {});
+			expect(pool.onlineThreadCount).to.equal(2);
+			await pool.call('sleep', 200);
+			expect(pool.onlineThreadCount).to.equal(3);
+			expect(gotOnline0).to.equal(0);
+			expect(gotOnline1).to.equal(1);
+			expect(gotOnline2).to.equal(2);
+			expect(gotOnline3).to.equal(2);
+
+			await pool.destroy();
+			expect(gotOnline0).to.equal(1);
+			expect(gotOnline1).to.equal(1);
+			expect(gotOnline2).to.equal(2);
+			expect(gotOnline3).to.equal(2);
+		});
 		it('has property: activeThreadCount', async function () {
 			pool = new ThreadPool({ filename: WORKER, minThreads: 2, maxThreads: 2 });
 			expect(pool.activeThreadCount).to.equal(0);
