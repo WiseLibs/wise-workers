@@ -1,6 +1,6 @@
 {
   "name": "wise-workers",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "A convenient worker thread pool implementation for Node.js",
   "author": "Joshua Wise <joshuathomaswise@gmail.com>",
   "homepage": "https://github.com/WiseLibs/wise-workers#readme",
